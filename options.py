@@ -8,6 +8,7 @@ class Options():
     def init(self, parser):        
         # global settings
         parser.add_argument('--batch_size', type=int, default=32, help='batch size')
+        parser.add_argument('--val_interval', type=int, default=1, help='val interval')
         parser.add_argument('--nepoch', type=int, default=250, help='training epochs')
         parser.add_argument('--train_workers', type=int, default=16, help='train_dataloader workers')
         parser.add_argument('--eval_workers', type=int, default=8, help='eval_dataloader workers')
@@ -21,7 +22,7 @@ class Options():
         parser.add_argument('--mode', type=str, default ='denoising',  help='image restoration mode')
         
         # args for saving 
-        parser.add_argument('--save_dir', type=str, default ='/home/ma-user/work/deNoTr/log',  help='save dir')
+        parser.add_argument('--save_dir', type=str, default ='save',  help='save dir')
         parser.add_argument('--save_images', action='store_true',default=False)
         parser.add_argument('--env', type=str, default ='_',  help='env')
         parser.add_argument('--checkpoint', type=int, default=50, help='checkpoint')

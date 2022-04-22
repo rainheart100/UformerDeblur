@@ -15,7 +15,7 @@ class DataLoaderTrain(Dataset):
     def __init__(self, rgb_dir, img_options=None, use_transform=False):
         super(DataLoaderTrain, self).__init__()
 
-        self.image_dir = os.path.join(rgb_dir, 'train')
+        self.image_dir = rgb_dir
         # transform = None
         # if use_transform:
         #     transform = PairCompose(
@@ -74,8 +74,7 @@ class DataLoaderTrain(Dataset):
         image = getattr(augment, apply_trans)(image)
         label = getattr(augment, apply_trans)(label)        
 
-        return label, image, label_path, image_path,
-
+        return label, image, label_path, image_path
 
     @staticmethod
     def _check_image(lst):
@@ -86,7 +85,7 @@ class DataLoaderTrain(Dataset):
 ##################################################################################################
 
 class DataLoaderTrain_Gaussian(Dataset):
-    def __init__(self, rgb_dir, noiselevel=5, img_options=None, target_transform=None):
+    def __init__(self, rgb_dir, noiselevel=5, img_options=None, target_transform=False):
         super(DataLoaderTrain_Gaussian, self).__init__()
 
         self.target_transform = target_transform
@@ -143,39 +142,35 @@ class DataLoaderVal(Dataset):
     def __init__(self, rgb_dir, target_transform=None):
         super(DataLoaderVal, self).__init__()
 
+        self.image_dir = rgb_dir
+        self.image_list = os.listdir(os.path.join(self.image_dir, 'blur/'))
+        self._check_image(self.image_list)
+
         self.target_transform = target_transform
 
-        gt_dir = 'groundtruth'
-        input_dir = 'input'
-        
-        clean_files = sorted(os.listdir(os.path.join(rgb_dir, gt_dir)))
-        noisy_files = sorted(os.listdir(os.path.join(rgb_dir, input_dir)))
-
-
-        self.clean_filenames = [os.path.join(rgb_dir, gt_dir, x) for x in clean_files if is_png_file(x)]
-        self.noisy_filenames = [os.path.join(rgb_dir, input_dir, x) for x in noisy_files if is_png_file(x)]
-        
-
-        self.tar_size = len(self.clean_filenames)  
+        self.tar_size = len(self.image_list)  
 
     def __len__(self):
         return self.tar_size
 
     def __getitem__(self, index):
         tar_index   = index % self.tar_size
+        image_path = os.path.join(self.image_dir, 'blur', self.image_list[tar_index])
+        label_path = os.path.join(self.image_dir, 'sharp', self.image_list[tar_index])
+        image = torch.from_numpy(np.float32(load_img(image_path)))
+        label = torch.from_numpy(np.float32(load_img(label_path)))
         
+        image = image.permute(2,0,1)
+        label = label.permute(2,0,1)
 
-        clean = torch.from_numpy(np.float32(load_img(self.clean_filenames[tar_index])))
-        noisy = torch.from_numpy(np.float32(load_img(self.noisy_filenames[tar_index])))
-                
-        clean_filename = os.path.split(self.clean_filenames[tar_index])[-1]
-        noisy_filename = os.path.split(self.noisy_filenames[tar_index])[-1]
+        return label, image, label_path, image_path
 
-        clean = clean.permute(2,0,1)
-        noisy = noisy.permute(2,0,1)
-
-        return clean, noisy, clean_filename, noisy_filename
-
+    @staticmethod
+    def _check_image(lst):
+        for x in lst:
+            splits = x.split('.')
+            if splits[-1] not in ['png', 'jpg', 'jpeg']:
+                raise ValueError
 ##################################################################################################
 
 class DataLoaderTest(Dataset):
