@@ -43,7 +43,6 @@ from timm.utils import NativeScaler
 from utils.loader import  get_training_data,get_validation_data
 from test_in_any_resolution import expand2square
 
-print ('loading opt done')
 
 ######### Logs dir ###########
 log_dir = os.path.join(dir_name,'log', opt.arch+opt.env)
