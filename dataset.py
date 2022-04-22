@@ -12,7 +12,7 @@ transforms_aug = [method for method in dir(augment) if callable(getattr(augment,
 
 ##################################################################################################
 class DataLoaderTrain(Dataset):
-    def __init__(self, rgb_dir, img_options=None, use_transform=True):
+    def __init__(self, rgb_dir, img_options=None, use_transform=False):
         super(DataLoaderTrain, self).__init__()
 
         self.image_dir = os.path.join(rgb_dir, 'train')
@@ -54,7 +54,7 @@ class DataLoaderTrain(Dataset):
         image = image.permute(2,0,1)
         label = label.permute(2,0,1)
 
-        #Crop Input and Target
+        # Crop Input and Target
         ps = self.img_options['patch_size']
         H = image.shape[1]
         W = image.shape[2]
