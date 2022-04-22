@@ -489,7 +489,10 @@ def window_partition(x, win_size, dilation_rate=1):
         windows = x.permute(0,2,1).contiguous().view(-1, C, win_size, win_size) # B' ,C ,Wh ,Ww
         windows = windows.permute(0,2,3,1).contiguous() # B' ,Wh ,Ww ,C
     else:
-        x = x.view(B, H // win_size, win_size, W // win_size, win_size, C)
+        try:
+            x = x.view(B, H // win_size, win_size, W // win_size, win_size, C)
+        except:
+            print (x.size())
         windows = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(-1, win_size, win_size, C) # B' ,Wh ,Ww ,C
     return windows
 
