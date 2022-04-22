@@ -15,7 +15,7 @@ class DataLoaderTrain(Dataset):
     def __init__(self, rgb_dir, img_options=None, use_transform=True):
         super(DataLoaderTrain, self).__init__()
 
-        image_dir = os.path.join(rgb_dir, 'train')
+        self.image_dir = os.path.join(rgb_dir, 'train')
         transform = None
         if use_transform:
             transform = PairCompose(
@@ -29,7 +29,7 @@ class DataLoaderTrain(Dataset):
             image = F.to_tensor(image)
             label = F.to_tensor(label)
 
-        self.image_list = os.listdir(os.path.join(image_dir, 'blur/'))
+        self.image_list = os.listdir(os.path.join(self.image_dir, 'blur'))
         self._check_image(self.image_list)
         self.image_list.sort()
         self.transform = transform
