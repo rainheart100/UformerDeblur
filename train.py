@@ -135,6 +135,7 @@ with torch.no_grad():
     for ii, data_val in enumerate((val_loader), 0):
         target = data_val[0].cuda()
         input_ = data_val[1].cuda()
+        print (input_.shape)
         filenames = data_val[2]
         psnr_val_rgb.append(utils.batch_PSNR(input_, target, False).item())
     psnr_val_rgb = sum(psnr_val_rgb)/len_valset
