@@ -481,7 +481,7 @@ class LeFF(nn.Module):
 #########################################
 ########### window operation#############
 def window_partition(x, win_size, dilation_rate=1):
-    B, H, W, C = x.shape
+    B, H, W, C = x.shape # (16, 60, 60, 256)
     if dilation_rate !=1:
         x = x.permute(0,3,1,2) # B, C, H, W
         assert type(dilation_rate) is int, 'dilation_rate should be a int'
@@ -1172,8 +1172,7 @@ class Uformer(nn.Module):
         # Encoder
         self.encoderlayer_0 = BasicUformerLayer(dim=embed_dim,
                             output_dim=embed_dim,
-                            input_resolution=(img_size,
-                                                img_size),
+                            input_resolution=(img_size, img_size),
                             depth=depths[0],
                             num_heads=num_heads[0],
                             win_size=win_size,
@@ -1334,6 +1333,7 @@ class Uformer(nn.Module):
     def forward(self, x, mask=None):
         # Input Projection
         y = self.input_proj(x)
+        print ('after input_proj size: '.format(y.size()))
         y = self.pos_drop(y)
         #Encoder
         conv0 = self.encoderlayer_0(y,mask=mask)
