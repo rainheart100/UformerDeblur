@@ -9,8 +9,9 @@ print(dir_name)
 import argparse
 import options
 ######### parser ###########
-opt = options.Options().init(argparse.ArgumentParser(description='image denoising')).parse_args()
+opt = options.Options().init(argparse.ArgumentParser(description='image deblur')).parse_args()
 print(opt)
+print ('loading opt done')
 
 import utils
 ######### Set GPUs ###########
