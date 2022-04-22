@@ -1333,7 +1333,7 @@ class Uformer(nn.Module):
     def forward(self, x, mask=None):
         # Input Projection
         y = self.input_proj(x)
-        print ('after input_proj size: '.format(y.size()))
+        print ('after input_proj size: {}'.format(y.size()))
         y = self.pos_drop(y)
         #Encoder
         conv0 = self.encoderlayer_0(y,mask=mask)
