@@ -36,7 +36,7 @@ class DataLoaderTrain(Dataset):
         
         self.img_options=img_options
 
-        self.tar_size = len(self.clean_filenames)  # get the size of target
+        self.tar_size = len(self)  # get the size of target
 
     def __len__(self):
         return (len(self.image_list))
