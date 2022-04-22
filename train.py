@@ -123,7 +123,7 @@ train_loader = DataLoader(dataset=train_dataset, batch_size=opt.batch_size, shuf
 len_trainset = train_dataset.__len__()
 
 val_dataset = get_validation_data(opt.val_dir)
-val_loader = DataLoader(dataset=val_dataset, batch_size=1, shuffle=False, 
+val_loader = DataLoader(dataset=val_dataset, batch_size=opt.val_batch_size, shuffle=False, 
         num_workers=opt.eval_workers, pin_memory=False, drop_last=False)
 len_valset = val_dataset.__len__()
 
@@ -181,7 +181,6 @@ for epoch in range(start_epoch, opt.nepoch + 1):
                     target = data_val[0].cuda()
                     input_ = data_val[1].cuda()
                     filenames = data_val[2]
-
                     input_, mask = expand2square(input_, factor=128) 
                     with torch.cuda.amp.autocast():
                         restored = model_restoration(input_, 1 - mask)

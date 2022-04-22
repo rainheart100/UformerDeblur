@@ -8,6 +8,7 @@ class Options():
     def init(self, parser):        
         # global settings
         parser.add_argument('--batch_size', type=int, default=32, help='batch size')
+        parser.add_argument('--val_batch_size', type=int, default=16, help='val interval')
         parser.add_argument('--val_interval', type=int, default=1, help='val interval')
         parser.add_argument('--nepoch', type=int, default=250, help='training epochs')
         parser.add_argument('--train_workers', type=int, default=16, help='train_dataloader workers')
