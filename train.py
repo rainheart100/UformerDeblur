@@ -173,39 +173,42 @@ for epoch in range(start_epoch, opt.nepoch + 1):
                 loss, optimizer,parameters=model_restoration.parameters())
         epoch_loss +=loss.item()
 
-        #### Evaluation ####
-        if (i+1)%eval_now==0 and i>0:
-            with torch.no_grad():
-                model_restoration.eval()
-                psnr_val_rgb = []
-                for ii, data_val in enumerate((tqdm(val_loader, total=len(val_loader))), 0):
-                    target = data_val[0].cuda()
-                    input_ = data_val[1].cuda()
-                    filenames = data_val[2]
-                    input_, mask = expand2square(input_, factor=128) 
-                    with torch.cuda.amp.autocast():
-                        restored = model_restoration(input_, 1 - mask)
-                    restored = torch.masked_select(restored, mask.bool())
-                    restored = torch.clamp(restored,0,1)  
-                    psnr_val_rgb.append(utils.batch_PSNR(restored, target, False).item())
 
-                psnr_val_rgb = sum(psnr_val_rgb)/len_valset
-                
-                if psnr_val_rgb > best_psnr:
-                    best_psnr = psnr_val_rgb
-                    best_epoch = epoch
-                    best_iter = i 
-                    torch.save({'epoch': epoch, 
-                                'state_dict': model_restoration.state_dict(),
-                                'optimizer' : optimizer.state_dict()
-                                }, os.path.join(model_dir,"model_best.pth"))
+    #### Evaluation ####
+    if epoch % eval_now == 0 and i>0:
+        with torch.no_grad():
+            model_restoration.eval()
+            psnr_val_rgb = []
+            for ii, data_val in enumerate((tqdm(val_loader, total=len(val_loader))), 0):
+                target = data_val[0].cuda()
+                input_ = data_val[1].cuda()
+                filenames = data_val[2]
+                input_, mask = expand2square(input_, factor=128) 
+                with torch.cuda.amp.autocast():
+                    restored = model_restoration(input_, 1 - mask)
+                restored = torch.masked_select(restored, mask.bool())
+                restored = torch.clamp(restored,0,1)  
+                psnr_val_rgb.append(utils.batch_PSNR(restored, target, False).item())
 
-                print("[Ep %d it %d\t PSNR SIDD: %.4f\t] ----  [best_Ep_SIDD %d best_it_SIDD %d Best_PSNR_SIDD %.4f] " % (epoch, i, psnr_val_rgb,best_epoch,best_iter,best_psnr))
-                with open(logname,'a') as f:
-                    f.write("[Ep %d it %d\t PSNR SIDD: %.4f\t] ----  [best_Ep_SIDD %d best_it_SIDD %d Best_PSNR_SIDD %.4f] " \
-                        % (epoch, i, psnr_val_rgb,best_epoch,best_iter,best_psnr)+'\n')
-                model_restoration.train()
-                torch.cuda.empty_cache()
+            psnr_val_rgb = sum(psnr_val_rgb)/len_valset
+            
+            if psnr_val_rgb > best_psnr:
+                best_psnr = psnr_val_rgb
+                best_epoch = epoch
+                best_iter = i 
+                torch.save({'epoch': epoch, 
+                            'state_dict': model_restoration.state_dict(),
+                            'optimizer' : optimizer.state_dict()
+                            }, os.path.join(model_dir,"model_best.pth"))
+
+            print("[Ep %d it %d\t PSNR SIDD: %.4f\t] ----  [best_Ep_SIDD %d best_it_SIDD %d Best_PSNR_SIDD %.4f] " % (epoch, i, psnr_val_rgb,best_epoch,best_iter,best_psnr))
+            with open(logname,'a') as f:
+                f.write("[Ep %d it %d\t PSNR SIDD: %.4f\t] ----  [best_Ep_SIDD %d best_it_SIDD %d Best_PSNR_SIDD %.4f] " \
+                    % (epoch, i, psnr_val_rgb,best_epoch,best_iter,best_psnr)+'\n')
+            model_restoration.train()
+            torch.cuda.empty_cache()
+
+
     scheduler.step()
     
     print("------------------------------------------------------------------")
