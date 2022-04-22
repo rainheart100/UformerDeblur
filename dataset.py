@@ -162,6 +162,7 @@ class DataLoaderVal(Dataset):
         
         image = image.permute(2,0,1)
         label = label.permute(2,0,1)
+        print (image.size, label.size)
 
         return label, image, label_path, image_path
 
