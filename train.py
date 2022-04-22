@@ -41,6 +41,7 @@ from torch.optim.lr_scheduler import StepLR
 from timm.utils import NativeScaler
 
 from utils.loader import  get_training_data,get_validation_data
+from test_in_any_resolution import expand2square
 
 ######### Logs dir ###########
 log_dir = os.path.join(dir_name,'log', opt.arch+opt.env)
@@ -179,8 +180,11 @@ for epoch in range(start_epoch, opt.nepoch + 1):
                     target = data_val[0].cuda()
                     input_ = data_val[1].cuda()
                     filenames = data_val[2]
+
+                    input_, mask = expand2square(input_, factor=128) 
                     with torch.cuda.amp.autocast():
-                        restored = model_restoration(input_)
+                        restored = model_restoration(input_, 1 - mask)
+                    restored = torch.masked_select(restored, mask.bool())
                     restored = torch.clamp(restored,0,1)  
                     psnr_val_rgb.append(utils.batch_PSNR(restored, target, False).item())
 

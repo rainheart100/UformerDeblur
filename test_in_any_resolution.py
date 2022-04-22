@@ -70,18 +70,20 @@ model_restoration.cuda()
 model_restoration.eval()
 
 
-def expand2square(timg,factor=16.0):
-    _, _, h, w = timg.size()
+def expand2square(timg, factor=16.0):
+    _, _, h, w = timg.size() # 3, 720, 1280
 
-    X = int(math.ceil(max(h,w)/float(factor))*factor)
+
+    X = int(math.ceil(max(h, w)/float(factor)) *factor)
 
     img = torch.zeros(1,3,X,X).type_as(timg) # 3, h,w
     mask = torch.zeros(1,1,X,X).type_as(timg)
 
     # print(img.size(),mask.size())
     # print((X - h)//2, (X - h)//2+h, (X - w)//2, (X - w)//2+w)
-    img[:,:, ((X - h)//2):((X - h)//2 + h),((X - w)//2):((X - w)//2 + w)] = timg
-    mask[:,:, ((X - h)//2):((X - h)//2 + h),((X - w)//2):((X - w)//2 + w)].fill_(1.0)
+    # put the pixel in the center of the image
+    img[:, :, ((X - h)//2):((X - h)//2 + h), ((X - w)//2):((X - w)//2 + w)] = timg
+    mask[:, :, ((X - h)//2):((X - h)//2 + h), ((X - w)//2):((X - w)//2 + w)].fill_(1.0)
     
     return img, mask
 
@@ -98,6 +100,7 @@ with torch.no_grad():
 
         rgb_gt = data_test[0].numpy().squeeze().transpose((1,2,0))
         # The factor is calculated (window_size(8) * down_scale(2^4) in this case) 
+        # all patch size = 128
         rgb_noisy, mask = expand2square(data_test[1].cuda(), factor=128) 
         filenames = data_test[2]
 
