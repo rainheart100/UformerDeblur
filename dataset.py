@@ -16,23 +16,23 @@ class DataLoaderTrain(Dataset):
         super(DataLoaderTrain, self).__init__()
 
         self.image_dir = os.path.join(rgb_dir, 'train')
-        transform = None
-        if use_transform:
-            transform = PairCompose(
-                [
-                    PairRandomCrop(256),
-                    PairRandomHorizontalFilp(),
-                    PairToTensor()
-                ]
-            )
-        else:
-            image = F.to_tensor(image)
-            label = F.to_tensor(label)
+        # transform = None
+        # if use_transform:
+        #     transform = PairCompose(
+        #         [
+        #             PairRandomCrop(256),
+        #             PairRandomHorizontalFilp(),
+        #             PairToTensor()
+        #         ]
+        #     )
+        # else:
+        #     image = F.to_tensor(image)
+        #     label = F.to_tensor(label)
 
         self.image_list = os.listdir(os.path.join(self.image_dir, 'blur'))
         self._check_image(self.image_list)
         self.image_list.sort()
-        self.transform = transform
+        # self.transform = transform
         
         self.img_options=img_options
 
@@ -48,8 +48,8 @@ class DataLoaderTrain(Dataset):
         image = torch.from_numpy(np.float32(load_img(image_path)))
         label = torch.from_numpy(np.float32(load_img(label_path)))
 
-        if self.transform:
-            image, label = self.transform(image, label)
+        # if self.transform:
+        #     image, label = self.transform(image, label)
         
         image = image.permute(2,0,1)
         label = label.permute(2,0,1)
