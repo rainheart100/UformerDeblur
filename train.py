@@ -32,6 +32,7 @@ import numpy as np
 from einops import rearrange, repeat
 import datetime
 from pdb import set_trace as stx
+from tqdm import tqdm
 
 from losses import CharbonnierLoss
 
@@ -177,7 +178,7 @@ for epoch in range(start_epoch, opt.nepoch + 1):
             with torch.no_grad():
                 model_restoration.eval()
                 psnr_val_rgb = []
-                for ii, data_val in enumerate((val_loader), 0):
+                for ii, data_val in enumerate((tqdm(val_loader, total=len(val_loader))), 0):
                     target = data_val[0].cuda()
                     input_ = data_val[1].cuda()
                     filenames = data_val[2]
