@@ -39,6 +39,7 @@ def expand2square(timg, factor=16.0):
     # put the pixel in the center of the image
     img[:, :, ((X - h)//2):((X - h)//2 + h), ((X - w)//2):((X - w)//2 + w)] = timg
     mask[:, :, ((X - h)//2):((X - h)//2 + h), ((X - w)//2):((X - w)//2 + w)].fill_(1.0)
+    mask = mask[0,:,:,:].unsqueeze(0)
     
     return img, mask
 
