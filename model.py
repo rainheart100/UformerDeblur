@@ -9,7 +9,7 @@ import torch.nn as nn
 import torch.utils.checkpoint as checkpoint
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 import torch.nn.functional as F
-from einops import rearrange, repeat
+from einops import rearrange, repeat                                                                 
 from einops.layers.torch import Rearrange
 import math
 import numpy as np
@@ -1151,7 +1151,7 @@ class Uformer(nn.Module):
         self.mlp_ratio = mlp_ratio
         self.token_projection = token_projection
         self.mlp = token_mlp
-        self.win_size =win_size
+        self.win_size = win_size
         self.reso = img_size
         self.pos_drop = nn.Dropout(p=drop_rate)
 
