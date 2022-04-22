@@ -74,6 +74,8 @@ class DataLoaderTrain(Dataset):
         image = getattr(augment, apply_trans)(image)
         label = getattr(augment, apply_trans)(label)        
 
+        # 训练的时候是每个小块每个小块的训练
+        print (image.size(), label.size())
         return label, image, label_path, image_path
 
     @staticmethod
@@ -162,7 +164,6 @@ class DataLoaderVal(Dataset):
         
         image = image.permute(2,0,1)
         label = label.permute(2,0,1)
-        print (image.size(), label.size())
 
         return label, image, label_path, image_path
 
