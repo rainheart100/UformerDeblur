@@ -173,6 +173,24 @@ for epoch in range(start_epoch, opt.nepoch + 1):
                 loss, optimizer,parameters=model_restoration.parameters())
         epoch_loss +=loss.item()
 
+    scheduler.step()
+    
+    print("------------------------------------------------------------------")
+    print("Epoch: {}\tTime: {:.4f}\tLoss: {:.4f}\tLearningRate {:.6f}".format(epoch, time.time()-epoch_start_time,epoch_loss, scheduler.get_lr()[0]))
+    print("------------------------------------------------------------------")
+    with open(logname,'a') as f:
+        f.write("Epoch: {}\tTime: {:.4f}\tLoss: {:.4f}\tLearningRate {:.6f}".format(epoch, time.time()-epoch_start_time,epoch_loss, scheduler.get_lr()[0])+'\n')
+
+    torch.save({'epoch': epoch, 
+                'state_dict': model_restoration.state_dict(),
+                'optimizer' : optimizer.state_dict()
+                }, os.path.join(model_dir,"model_latest.pth"))   
+
+    if epoch%opt.checkpoint == 0:
+        torch.save({'epoch': epoch, 
+                    'state_dict': model_restoration.state_dict(),
+                    'optimizer' : optimizer.state_dict()
+                    }, os.path.join(model_dir,"model_epoch_{}.pth".format(epoch))) 
 
     #### Evaluation ####
     if epoch % eval_now == 0 and i>0:
@@ -208,23 +226,4 @@ for epoch in range(start_epoch, opt.nepoch + 1):
             model_restoration.train()
             torch.cuda.empty_cache()
 
-
-    scheduler.step()
-    
-    print("------------------------------------------------------------------")
-    print("Epoch: {}\tTime: {:.4f}\tLoss: {:.4f}\tLearningRate {:.6f}".format(epoch, time.time()-epoch_start_time,epoch_loss, scheduler.get_lr()[0]))
-    print("------------------------------------------------------------------")
-    with open(logname,'a') as f:
-        f.write("Epoch: {}\tTime: {:.4f}\tLoss: {:.4f}\tLearningRate {:.6f}".format(epoch, time.time()-epoch_start_time,epoch_loss, scheduler.get_lr()[0])+'\n')
-
-    torch.save({'epoch': epoch, 
-                'state_dict': model_restoration.state_dict(),
-                'optimizer' : optimizer.state_dict()
-                }, os.path.join(model_dir,"model_latest.pth"))   
-
-    if epoch%opt.checkpoint == 0:
-        torch.save({'epoch': epoch, 
-                    'state_dict': model_restoration.state_dict(),
-                    'optimizer' : optimizer.state_dict()
-                    }, os.path.join(model_dir,"model_epoch_{}.pth".format(epoch))) 
 print("Now time is : ",datetime.datetime.now().isoformat())
