@@ -27,13 +27,12 @@ from skimage.metrics import structural_similarity as ssim_loss
 
 
 def expand2square(timg, factor=16.0):
-    _, _, h, w = timg.size() # 3, 720, 1280
-
+    b, c, h, w = timg.size() # 3, 720, 1280
 
     X = int(math.ceil(max(h, w)/float(factor)) *factor)
 
-    img = torch.zeros(1,3,X,X).type_as(timg) # 3, h,w
-    mask = torch.zeros(1,1,X,X).type_as(timg)
+    img = torch.zeros(b, c, X, X).type_as(timg) # 3, h,w
+    mask = torch.zeros(b, 1, X, X).type_as(timg)
 
     # print(img.size(),mask.size())
     # print((X - h)//2, (X - h)//2+h, (X - w)//2, (X - w)//2+w)
