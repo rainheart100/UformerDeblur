@@ -1,4 +1,4 @@
-# RUN
+# New Features!
 * 运行方法
 bash train.sh
 

@@ -71,11 +71,9 @@ class DataLoaderTrain(Dataset):
 
         apply_trans = transforms_aug[random.getrandbits(3)]
 
-        image = getattr(augment, apply_trans)(image)
+        image = getattr(augment, apply_trans)(image)  # (3, 128, 128)
         label = getattr(augment, apply_trans)(label)        
 
-        # 训练的时候是每个小块每个小块的训练
-        print (image.size(), label.size())
         return label, image, label_path, image_path
 
     @staticmethod
@@ -159,10 +157,10 @@ class DataLoaderVal(Dataset):
         tar_index   = index % self.tar_size
         image_path = os.path.join(self.image_dir, 'blur', self.image_list[tar_index])
         label_path = os.path.join(self.image_dir, 'sharp', self.image_list[tar_index])
-        image = torch.from_numpy(np.float32(load_img(image_path)))
+        image = torch.from_numpy(np.float32(load_img(image_path))) 
         label = torch.from_numpy(np.float32(load_img(label_path)))
         
-        image = image.permute(2,0,1)
+        image = image.permute(2,0,1) # (3, 720, 1280)
         label = label.permute(2,0,1)
 
         return label, image, label_path, image_path
