@@ -126,7 +126,7 @@ len_trainset = train_dataset.__len__()
 # len_valset = val_dataset.__len__()
 
 print("Sizeof training set: ", len_trainset)
-print (", sizeof validation set: ", len_valset)
+# print (", sizeof validation set: ", len_valset)
 # ######### validation ###########
 # with torch.no_grad():
 #     psnr_val_rgb = []
