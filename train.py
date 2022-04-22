@@ -118,14 +118,15 @@ img_options_train = {'patch_size':opt.train_ps}
 train_dataset = get_training_data(opt.train_dir, img_options_train)
 train_loader = DataLoader(dataset=train_dataset, batch_size=opt.batch_size, shuffle=True, 
         num_workers=opt.train_workers, pin_memory=True, drop_last=False)
-
-val_dataset = get_validation_data(opt.val_dir)
-val_loader = DataLoader(dataset=val_dataset, batch_size=opt.batch_size, shuffle=False, 
-        num_workers=opt.eval_workers, pin_memory=False, drop_last=False)
-
 len_trainset = train_dataset.__len__()
-len_valset = val_dataset.__len__()
-print("Sizeof training set: ", len_trainset,", sizeof validation set: ", len_valset)
+
+# val_dataset = get_validation_data(opt.val_dir)
+# val_loader = DataLoader(dataset=val_dataset, batch_size=opt.batch_size, shuffle=False, 
+#         num_workers=opt.eval_workers, pin_memory=False, drop_last=False)
+# len_valset = val_dataset.__len__()
+
+print("Sizeof training set: ", len_trainset)
+print (", sizeof validation set: ", len_valset)
 # ######### validation ###########
 # with torch.no_grad():
 #     psnr_val_rgb = []
