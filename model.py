@@ -1153,15 +1153,15 @@ class MultiScaleFormer(nn.Module):
         self.act = nn.GELU()
 
         if mask1_dim < dim:
-            self.sr1 = nn.Conv2d(dim, mask1_dim, kernel_size=4, stride=2, padding=1)
+            self.sr1 = nn.Conv2d(mask1_dim, dim, kernel_size=4, stride=2, padding=1)
         else:
-            self.sr1 = nn.ConvTranspose2d(dim, mask1_dim, kernel_size=2, stride=2)
+            self.sr1 = nn.ConvTranspose2d(mask1_dim, dim, kernel_size=2, stride=2)
         self.norm1 = nn.LayerNorm(dim)
 
         if mask2_dim < dim:
-            self.sr2 = nn.Conv2d(dim, mask2_dim, kernel_size=4, stride=2, padding=1)
+            self.sr2 = nn.Conv2d(mask2_dim, dim, kernel_size=4, stride=2, padding=1)
         else:
-            self.sr2 = nn.ConvTranspose2d(dim, mask2_dim, kernel_size=2, stride=2)
+            self.sr2 = nn.ConvTranspose2d(mask2_dim, dim,  kernel_size=2, stride=2)
         self.norm2 = nn.LayerNorm(dim)
 
         self.kv1 = nn.Linear(dim, dim, bias=qkv_bias)
