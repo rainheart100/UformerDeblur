@@ -1197,8 +1197,8 @@ class MultiScaleFormer(nn.Module):
         # q
         q = self.q(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
 
-        mask1 = mask1.permute(0, 2, 1).reshape(B1, C, int(N1 ** 0.5), int(N1 ** 0.5))
-        mask2 = mask2.permute(0, 2, 1).reshape(B2, C, int(N2 ** 0.5), int(N2 ** 0.5))
+        mask1 = mask1.permute(0, 2, 1).reshape(B1, C1, int(N1 ** 0.5), int(N1 ** 0.5))
+        mask2 = mask2.permute(0, 2, 1).reshape(B2, C2, int(N2 ** 0.5), int(N2 ** 0.5))
         mask1 = self.act(self.norm1(self.sr1(mask1).reshape(B, C, -1).permute(0, 2, 1)))
         mask2 = self.act(self.norm2(self.sr2(mask2).reshape(B, C, -1).permute(0, 2, 1)))
 
