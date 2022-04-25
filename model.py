@@ -1152,16 +1152,10 @@ class MultiScaleFormer(nn.Module):
         self.proj = nn.Linear(dim, dim)
         self.act = nn.GELU()
 
-        if mask1_dim < dim:
-            self.sr1 = nn.Conv2d(mask1_dim, dim, kernel_size=4, stride=2, padding=1)
-        else:
-            self.sr1 = nn.ConvTranspose2d(mask1_dim, dim, kernel_size=2, stride=2)
+        self.sr1 = nn.Conv2d(mask1_dim, dim, kernel_size=3, stride=1, padding=1)
         self.norm1 = nn.LayerNorm(dim)
 
-        if mask2_dim < dim:
-            self.sr2 = nn.Conv2d(mask2_dim, dim, kernel_size=4, stride=2, padding=1)
-        else:
-            self.sr2 = nn.ConvTranspose2d(mask2_dim, dim,  kernel_size=2, stride=2)
+        self.sr2 = nn.Conv2d(mask2_dim, dim, kernel_size=3, stride=1, padding=1)
         self.norm2 = nn.LayerNorm(dim)
 
         self.kv1 = nn.Linear(dim, dim, bias=qkv_bias)
@@ -1199,7 +1193,7 @@ class MultiScaleFormer(nn.Module):
 
         mask1 = mask1.permute(0, 2, 1).reshape(B1, C1, int(N1 ** 0.5), int(N1 ** 0.5))
         mask2 = mask2.permute(0, 2, 1).reshape(B2, C2, int(N2 ** 0.5), int(N2 ** 0.5))
-        print (mask1.shape, mask2.shape)
+        
         mask1 = self.act(self.norm1(self.sr1(mask1).reshape(B, C, -1).permute(0, 2, 1)))
         mask2 = self.act(self.norm2(self.sr2(mask2).reshape(B, C, -1).permute(0, 2, 1)))
 
