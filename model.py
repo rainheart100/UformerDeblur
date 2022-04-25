@@ -1196,14 +1196,13 @@ class MultiScaleFormer(nn.Module):
         mask1 = self.act(self.norm1(self.sr1(mask1).reshape(B, C, -1).permute(0, 2, 1)))
         mask2 = self.act(self.norm2(self.sr2(mask2).reshape(B, C, -1).permute(0, 2, 1)))
         print (mask1.shape, mask2.shape)
-        
+
         kv1 = self.kv1(mask1).reshape(B, -1, 2, self.num_heads//2, C // self.num_heads).permute(2, 0, 3, 1, 4) # k、v在这里已经降维了
         kv2 = self.kv2(mask2).reshape(B, -1, 2, self.num_heads//2, C // self.num_heads).permute(2, 0, 3, 1, 4)
         k1, v1 = kv1[0], kv1[1] #B head N C
         k2, v2 = kv2[0], kv2[1]
         attn1 = (q[:, :self.num_heads//2] @ k1.transpose(-2, -1)) * self.scale
         attn1 = attn1.softmax(dim=-1)
-        attn1 = self.attn_drop(attn1)
         v1 = v1 + self.local_conv1(v1.transpose(1, 2).reshape(B, -1, C//2).
                                 transpose(1, 2).view(B,C//2, H//self.sr_ratio, W//self.sr_ratio)).\
             view(B, C//2, -1).view(B, self.num_heads//2, C // self.num_heads, -1).transpose(-1, -2) # 已经是同一尺度的了
