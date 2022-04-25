@@ -1183,6 +1183,7 @@ class MultiScaleFormer(nn.Module):
 
 
     def forward(self, x, H, W, mask1, mask2):
+        print (x.shape)
         B, N, C = x.shape
         # q
         q = self.q(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
