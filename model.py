@@ -1205,6 +1205,8 @@ class MultiScaleFormer(nn.Module):
         k2, v2 = kv2[0], kv2[1]
         print (k1.shape, v1.shape, q.shape)
         attn1 = (q[:, :self.num_heads//2] @ k1.transpose(-2, -1)) * self.scale
+        print (attn1.shape)
+
         attn1 = attn1.softmax(dim=-1)
         v1 = v1 + self.local_conv1(v1.transpose(1, 2).reshape(B, -1, C//2).
                                 transpose(1, 2).view(B,C//2, H//ratio1, W//ratio1)).\
