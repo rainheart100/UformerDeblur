@@ -24,8 +24,6 @@ from skimage.metrics import peak_signal_noise_ratio as psnr_loss
 from skimage.metrics import structural_similarity as ssim_loss
 
 
-
-
 def expand2square(timg, factor=16.0):
     b, c, h, w = timg.size() # 3, 720, 1280
 

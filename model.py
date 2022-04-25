@@ -1136,6 +1136,81 @@ class CatCrossUformerLayer(nn.Module):
             flops += blk.flops()
         return flops
 
+
+class MultiScaleFormer(nn.Module):
+    def __init__(self, dim, mask1_dim, mask2_dim, qkv_bias=True, num_heads=8):
+        assert dim % num_heads == 0, f"dim {dim} should be divided by num_heads {num_heads}."
+
+        self.dim = dim
+        self.num_heads = num_heads
+        head_dim = dim // num_heads
+        self.scale = head_dim ** -0.5
+        # for embedding
+        self.q = nn.Linear(dim, dim, bias=qkv_bias)
+        self.proj = nn.Linear(dim, dim)
+        self.act = nn.GELU()
+
+        self.sr1 = nn.Conv2d(dim, mask1_dim, kernel_size=3, padding=1, stride=1)
+        self.norm1 = nn.LayerNorm(dim)
+        self.sr2 = nn.Conv2d(dim, mask2_dim, kernel_size=3, padding=1, stride=1)
+        self.norm2 = nn.LayerNorm(dim)
+
+        self.kv1 = nn.Linear(dim, dim, bias=qkv_bias)
+        self.kv2 = nn.Linear(dim, dim, bias=qkv_bias)
+
+        self.local_conv1 = nn.Conv2d(dim//2, dim//2, kernel_size=3, padding=1, stride=1, groups=dim//2)  # B N C
+        self.local_conv2 = nn.Conv2d(dim//2, dim//2, kernel_size=3, padding=1, stride=1, groups=dim//2)  # B N C
+
+        self.apply(self._init_weights)
+
+
+    def _init_weights(self, m):
+        if isinstance(m, nn.Linear):
+            trunc_normal_(m.weight, std=.02)
+            if isinstance(m, nn.Linear) and m.bias is not None:
+                nn.init.constant_(m.bias, 0)
+        elif isinstance(m, nn.LayerNorm):
+            nn.init.constant_(m.bias, 0)
+            nn.init.constant_(m.weight, 1.0)
+        elif isinstance(m, nn.Conv2d):
+            fan_out = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+            fan_out //= m.groups
+            m.weight.data.normal_(0, math.sqrt(2.0 / fan_out))
+            if m.bias is not None:
+                m.bias.data.zero_()
+
+
+    def forward(self, x, H, W, mask1, mask2):
+        B, N, C = x.shape
+        # q
+        q = self.q(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
+
+        # kv
+        kv1 = self.kv1(mask1).reshape(B, -1, 2, self.num_heads//2, C // self.num_heads).permute(2, 0, 3, 1, 4) # k、v在这里已经降维了
+        kv2 = self.kv2(mask2).reshape(B, -1, 2, self.num_heads//2, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        k1, v1 = kv1[0], kv1[1] #B head N C
+        k2, v2 = kv2[0], kv2[1]
+        attn1 = (q[:, :self.num_heads//2] @ k1.transpose(-2, -1)) * self.scale
+        attn1 = attn1.softmax(dim=-1)
+        attn1 = self.attn_drop(attn1)
+        v1 = v1 + self.local_conv1(v1.transpose(1, 2).reshape(B, -1, C//2).
+                                transpose(1, 2).view(B,C//2, H//self.sr_ratio, W//self.sr_ratio)).\
+            view(B, C//2, -1).view(B, self.num_heads//2, C // self.num_heads, -1).transpose(-1, -2) # 已经是同一尺度的了
+        x1 = (attn1 @ v1).transpose(1, 2).reshape(B, N, C//2)
+        attn2 = (q[:, self.num_heads // 2:] @ k2.transpose(-2, -1)) * self.scale
+        attn2 = attn2.softmax(dim=-1)
+        attn2 = self.attn_drop(attn2)
+        v2 = v2 + self.local_conv2(v2.transpose(1, 2).reshape(B, -1, C//2).
+                                transpose(1, 2).view(B, C//2, H*2//self.sr_ratio, W*2//self.sr_ratio)).\
+            view(B, C//2, -1).view(B, self.num_heads//2, C // self.num_heads, -1).transpose(-1, -2)
+        x2 = (attn2 @ v2).transpose(1, 2).reshape(B, N, C//2)
+
+        x = torch.cat([x1,x2], dim=-1)
+
+        x = self.proj(x)
+        return x
+
+
 class Uformer(nn.Module):
     def __init__(self, img_size=128, in_chans=3,
                  embed_dim=32, depths=[2, 2, 2, 2, 2, 2, 2, 2, 2], num_heads=[1, 2, 4, 8, 16, 16, 8, 4, 2],
@@ -1228,6 +1303,11 @@ class Uformer(nn.Module):
                             use_checkpoint=use_checkpoint,
                             token_projection=token_projection,token_mlp=token_mlp,se_layer=se_layer)
         self.dowsample_3 = dowsample(embed_dim*8, embed_dim*16)
+
+        self.multi_scale_former_1= MultiScaleFormer(embed_dim*2, embed_dim*4, embed_dim*8, qkv_bias=True, num_heads=num_heads[1])
+        self.multi_scale_former_2= MultiScaleFormer(embed_dim*4, embed_dim*2, embed_dim*8, qkv_bias=True, num_heads=num_heads[2])
+        self.multi_scale_former_3= MultiScaleFormer(embed_dim*8, embed_dim*2, embed_dim*4, qkv_bias=True, num_heads=num_heads[3])
+
 
         # Bottleneck
         self.conv = BasicUformerLayer(dim=embed_dim*16,
@@ -1346,17 +1426,21 @@ class Uformer(nn.Module):
         # Bottleneck
         conv4 = self.conv(pool3, mask=mask)
 
+        mlscale_output1 = self.multi_scale_former_1(conv1, 128, 128, conv2, conv3)
+        mlscale_output2 = self.multi_scale_former_2(conv2, 128, 128, conv1, conv3)
+        mlscale_output3 = self.multi_scale_former_2(conv3, 128, 128, conv1, conv2)
+
         #Decoder
         up0 = self.upsample_0(conv4)
-        deconv0 = torch.cat([up0,conv3],-1)
+        deconv0 = torch.cat([up0, mlscale_output3],-1)
         deconv0 = self.decoderlayer_0(deconv0,mask=mask)
         
         up1 = self.upsample_1(deconv0)
-        deconv1 = torch.cat([up1,conv2],-1)
+        deconv1 = torch.cat([up1, mlscale_output2],-1)
         deconv1 = self.decoderlayer_1(deconv1,mask=mask)
 
         up2 = self.upsample_2(deconv1)
-        deconv2 = torch.cat([up2,conv1],-1)
+        deconv2 = torch.cat([up2, mlscale_output1],-1)
         deconv2 = self.decoderlayer_2(deconv2,mask=mask)
 
         up3 = self.upsample_3(deconv2)
