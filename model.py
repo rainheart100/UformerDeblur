@@ -1183,13 +1183,13 @@ class MultiScaleFormer(nn.Module):
 
 
     def forward(self, x, H, W, mask1, mask2):
-        print (x.shape)
         B, N, C = x.shape
         # q
         q = self.q(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
 
         # kv
         kv1 = self.kv1(mask1).reshape(B, -1, 2, self.num_heads//2, C // self.num_heads).permute(2, 0, 3, 1, 4) # k、v在这里已经降维了
+        print (kv1.size())
         kv2 = self.kv2(mask2).reshape(B, -1, 2, self.num_heads//2, C // self.num_heads).permute(2, 0, 3, 1, 4)
         k1, v1 = kv1[0], kv1[1] #B head N C
         k2, v2 = kv2[0], kv2[1]
@@ -1429,7 +1429,7 @@ class Uformer(nn.Module):
         # Bottleneck
         conv4 = self.conv(pool3, mask=mask)
 
-        mlscale_output1 = self.multi_scale_former_1(conv1, 128, 128, conv2, conv3)
+        mlscale_output1 = self.multi_scale_former_1(conv1, 64, 64, conv2, conv3)
         mlscale_output2 = self.multi_scale_former_2(conv2, 128, 128, conv1, conv3)
         mlscale_output3 = self.multi_scale_former_2(conv3, 128, 128, conv1, conv2)
 
