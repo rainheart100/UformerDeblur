@@ -1139,6 +1139,8 @@ class CatCrossUformerLayer(nn.Module):
 
 class MultiScaleFormer(nn.Module):
     def __init__(self, dim, mask1_dim, mask2_dim, qkv_bias=True, num_heads=8):
+        super().__init__()
+
         assert dim % num_heads == 0, f"dim {dim} should be divided by num_heads {num_heads}."
 
         self.dim = dim
@@ -1304,9 +1306,9 @@ class Uformer(nn.Module):
                             token_projection=token_projection,token_mlp=token_mlp,se_layer=se_layer)
         self.dowsample_3 = dowsample(embed_dim*8, embed_dim*16)
 
-        self.multi_scale_former_1= MultiScaleFormer(embed_dim*2, embed_dim*4, embed_dim*8, qkv_bias=True, num_heads=num_heads[1])
-        self.multi_scale_former_2= MultiScaleFormer(embed_dim*4, embed_dim*2, embed_dim*8, qkv_bias=True, num_heads=num_heads[2])
-        self.multi_scale_former_3= MultiScaleFormer(embed_dim*8, embed_dim*2, embed_dim*4, qkv_bias=True, num_heads=num_heads[3])
+        self.multi_scale_former_1 = MultiScaleFormer(embed_dim*2, embed_dim*4, embed_dim*8, qkv_bias=True, num_heads=num_heads[1])
+        self.multi_scale_former_2 = MultiScaleFormer(embed_dim*4, embed_dim*2, embed_dim*8, qkv_bias=True, num_heads=num_heads[2])
+        self.multi_scale_former_3 = MultiScaleFormer(embed_dim*8, embed_dim*2, embed_dim*4, qkv_bias=True, num_heads=num_heads[3])
 
 
         # Bottleneck
