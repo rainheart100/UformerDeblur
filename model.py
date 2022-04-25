@@ -1203,7 +1203,7 @@ class MultiScaleFormer(nn.Module):
         kv2 = self.kv2(mask2).reshape(B, -1, 2, self.num_heads//2, C // self.num_heads).permute(2, 0, 3, 1, 4)
         k1, v1 = kv1[0], kv1[1] #B head N C
         k2, v2 = kv2[0], kv2[1]
-        print (k1.shape, v1.shape)
+        print (k1.shape, v1.shape, q.shape)
         attn1 = (q[:, :self.num_heads//2] @ k1.transpose(-2, -1)) * self.scale
         attn1 = attn1.softmax(dim=-1)
         v1 = v1 + self.local_conv1(v1.transpose(1, 2).reshape(B, -1, C//2).
