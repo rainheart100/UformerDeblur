@@ -1188,6 +1188,9 @@ class MultiScaleFormer(nn.Module):
         B1, N1, C1 = mask1.shape
         B2, N2, C2 = mask2.shape
 
+        ratio1 = int(N1 ** 0.5) / int(N ** 0.5)
+        ratio2 = int(N2 ** 0.5) / int(N ** 0.5)
+
         # q
         q = self.q(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
 
@@ -1204,14 +1207,14 @@ class MultiScaleFormer(nn.Module):
         attn1 = (q[:, :self.num_heads//2] @ k1.transpose(-2, -1)) * self.scale
         attn1 = attn1.softmax(dim=-1)
         v1 = v1 + self.local_conv1(v1.transpose(1, 2).reshape(B, -1, C//2).
-                                transpose(1, 2).view(B,C//2, H//self.sr_ratio, W//self.sr_ratio)).\
+                                transpose(1, 2).view(B,C//2, H//ratio1, W//ratio1)).\
             view(B, C//2, -1).view(B, self.num_heads//2, C // self.num_heads, -1).transpose(-1, -2) # 已经是同一尺度的了
         x1 = (attn1 @ v1).transpose(1, 2).reshape(B, N, C//2)
         attn2 = (q[:, self.num_heads // 2:] @ k2.transpose(-2, -1)) * self.scale
         attn2 = attn2.softmax(dim=-1)
         attn2 = self.attn_drop(attn2)
         v2 = v2 + self.local_conv2(v2.transpose(1, 2).reshape(B, -1, C//2).
-                                transpose(1, 2).view(B, C//2, H*2//self.sr_ratio, W*2//self.sr_ratio)).\
+                                transpose(1, 2).view(B, C//2, H*2//ratio2, W*2//ratio2)).\
             view(B, C//2, -1).view(B, self.num_heads//2, C // self.num_heads, -1).transpose(-1, -2)
         x2 = (attn2 @ v2).transpose(1, 2).reshape(B, N, C//2)
 
