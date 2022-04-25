@@ -1156,12 +1156,14 @@ class MultiScaleFormer(nn.Module):
             self.sr1 = nn.Conv2d(dim, mask1_dim, kernel_size=4, stride=2, padding=1)
         else:
             self.sr1 = nn.ConvTranspose2d(dim, mask1_dim, kernel_size=2, stride=2)
+        self.norm1 = nn.LayerNorm(dim)
 
         if mask2_dim < dim:
             self.sr2 = nn.Conv2d(dim, mask2_dim, kernel_size=4, stride=2, padding=1)
         else:
             self.sr2 = nn.ConvTranspose2d(dim, mask2_dim, kernel_size=2, stride=2)
-  
+        self.norm2 = nn.LayerNorm(dim)
+
         self.kv1 = nn.Linear(dim, dim, bias=qkv_bias)
         self.kv2 = nn.Linear(dim, dim, bias=qkv_bias)
 
@@ -1193,9 +1195,11 @@ class MultiScaleFormer(nn.Module):
         q = self.q(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
 
         # kv
+        mask1 = self.act(self.norm1(self.sr1(mask1).reshape(B, C, -1).permute(0, 2, 1)))
+        mask2 = self.act(self.norm2(self.sr2(mask2).reshape(B, C, -1).permute(0, 2, 1)))
+
         print (mask1.shape, mask2.shape)
         kv1 = self.kv1(mask1).reshape(B, -1, 2, self.num_heads//2, C // self.num_heads).permute(2, 0, 3, 1, 4) # k、v在这里已经降维了
-        print (kv1.size())
         kv2 = self.kv2(mask2).reshape(B, -1, 2, self.num_heads//2, C // self.num_heads).permute(2, 0, 3, 1, 4)
         k1, v1 = kv1[0], kv1[1] #B head N C
         k2, v2 = kv2[0], kv2[1]
