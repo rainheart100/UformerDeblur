@@ -1193,11 +1193,10 @@ class MultiScaleFormer(nn.Module):
 
         mask1 = mask1.permute(0, 2, 1).reshape(B1, C1, int(N1 ** 0.5), int(N1 ** 0.5))
         mask2 = mask2.permute(0, 2, 1).reshape(B2, C2, int(N2 ** 0.5), int(N2 ** 0.5))
-        
         mask1 = self.act(self.norm1(self.sr1(mask1).reshape(B, C, -1).permute(0, 2, 1)))
         mask2 = self.act(self.norm2(self.sr2(mask2).reshape(B, C, -1).permute(0, 2, 1)))
-
         print (mask1.shape, mask2.shape)
+        
         kv1 = self.kv1(mask1).reshape(B, -1, 2, self.num_heads//2, C // self.num_heads).permute(2, 0, 3, 1, 4) # k、v在这里已经降维了
         kv2 = self.kv2(mask2).reshape(B, -1, 2, self.num_heads//2, C // self.num_heads).permute(2, 0, 3, 1, 4)
         k1, v1 = kv1[0], kv1[1] #B head N C
